@@ -2,7 +2,8 @@ import './env'; // validates env first
 import express from 'express';
 import { env } from './env';
 import { createBot } from './bot/bot';
-import { testConnection } from './db/client';
+import { db, testConnection } from './db/client';
+import { runMigrations } from './db/migrate';
 import { startReminderWorker } from './workers/reminderWorker';
 import { healthRouter } from './routes/health';
 import { createWebhookRouter } from './routes/webhook';
@@ -11,6 +12,13 @@ import { logger } from './utils/logger';
 
 async function main() {
   await testConnection();
+  logger.info('Database connected');
+
+  if (process.env.RUN_MIGRATIONS === 'true') {
+    logger.info('Running migrations...');
+    await runMigrations(db);
+    logger.info('Migration complete');
+  }
 
   const bot = createBot();
   const app = express();
@@ -20,20 +28,23 @@ async function main() {
   app.use(createInternalEventsRouter(bot));
   app.use(createWebhookRouter(bot));
 
+  logger.info('Starting reminder worker');
   startReminderWorker(bot);
 
   if (env.TELEGRAM_USE_POLLING) {
     logger.info('Starting bot in polling mode');
     await bot.launch();
-    logger.info('Bot polling started');
+    logger.info('Bot startup complete');
   } else {
     if (!env.PUBLIC_BOT_URL) {
       logger.error('PUBLIC_BOT_URL is required when TELEGRAM_USE_POLLING=false');
       process.exit(1);
     }
     const webhookUrl = `${env.PUBLIC_BOT_URL}/telegram/webhook/${env.TELEGRAM_WEBHOOK_SECRET}`;
+    logger.info('Registering webhook');
     await bot.telegram.setWebhook(webhookUrl);
     logger.info('Webhook set', { webhookUrl });
+    logger.info('Bot startup complete');
   }
 
   app.listen(env.PORT, () => {
