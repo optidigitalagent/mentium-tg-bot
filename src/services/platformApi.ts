@@ -88,6 +88,10 @@ export function buildLinkUrl(token: string, action: string = 'start'): string {
   return buildPlatformUrl('/tg-connect', { token, source: 'telegram', action });
 }
 
+export function buildConnectPlaceholderUrl(): string {
+  return buildPlatformUrl('/', { source: 'telegram', action: 'connect_placeholder' });
+}
+
 export function buildStartUrl(): string {
   return buildPlatformUrl('/', { source: 'telegram', action: 'start' });
 }

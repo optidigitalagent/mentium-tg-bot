@@ -12,6 +12,7 @@ import {
   afterLinkKeyboard,
   welcomeKeyboard,
   scheduleSavedKeyboard,
+  connectPlaceholderKeyboard,
 } from './keyboards';
 import {
   isAlreadyLinked,
@@ -27,7 +28,7 @@ import {
   scheduleRemindersForNextLesson,
   getMvpReminderOffsets,
 } from '../services/reminderService';
-import { notifyScheduleUpdated, buildLearningUrl, buildLinkUrl, buildStartLinkedUrl, buildStartUrl } from '../services/platformApi';
+import { notifyScheduleUpdated, buildLearningUrl, buildLinkUrl, buildStartLinkedUrl, buildStartUrl, buildConnectPlaceholderUrl } from '../services/platformApi';
 import { logEvent } from '../services/eventService';
 import { isValidTimeString } from '../utils/time';
 import { logger } from '../utils/logger';
@@ -69,15 +70,12 @@ export function registerCallbacks(bot: Telegraf<Context>) {
     // --- Discover More ---
     if (data === 'DISCOVER_MORE') {
       await logEvent(chatId, 'discover_clicked');
-      const linked = await isAlreadyLinked(chatId);
-      let connectUrl: string;
-      if (linked) {
-        connectUrl = buildStartLinkedUrl();
-      } else {
-        const token = await createLinkToken(String(ctx.from?.id), chatId, ctx.from?.username);
-        connectUrl = buildLinkUrl(token, 'connect');
-      }
-      return ctx.reply(MSG.discoverMore, require('./keyboards').discoverKeyboard(buildStartUrl(), connectUrl));
+      return ctx.reply(MSG.discoverMore, require('./keyboards').discoverKeyboard(buildStartUrl()));
+    }
+
+    // --- Connect placeholder (tg-connect not yet live) ---
+    if (data === 'CONNECT_PLACEHOLDER') {
+      return ctx.reply(MSG.connectPlaceholder, connectPlaceholderKeyboard(buildConnectPlaceholderUrl()));
     }
 
     // --- Back to welcome ---

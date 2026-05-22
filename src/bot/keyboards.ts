@@ -21,10 +21,17 @@ export function welcomeKeyboard(openMentiumUrl: string) {
   ]);
 }
 
-export function discoverKeyboard(openMentiumUrl: string, connectUrl: string) {
+export function discoverKeyboard(openMentiumUrl: string) {
   return Markup.inlineKeyboard([
     [Markup.button.url('Open Mentium', openMentiumUrl)],
-    [Markup.button.url('Підключити акаунт', connectUrl)],
+    [Markup.button.callback('Підключити акаунт', 'CONNECT_PLACEHOLDER')],
+    [Markup.button.callback('Назад', 'BACK_TO_WELCOME')],
+  ]);
+}
+
+export function connectPlaceholderKeyboard(openMentiumUrl: string) {
+  return Markup.inlineKeyboard([
+    [Markup.button.url('Open Mentium', openMentiumUrl)],
     [Markup.button.callback('Назад', 'BACK_TO_WELCOME')],
   ]);
 }

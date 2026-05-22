@@ -4,6 +4,7 @@ import {
   welcomeKeyboard,
   alreadyLinkedKeyboard,
   connectKeyboard,
+  connectPlaceholderKeyboard,
   openPlatformKeyboard,
   rescheduleKeyboard,
 } from './keyboards';
@@ -15,7 +16,7 @@ import {
   getActiveSchedule,
   disableReminders,
 } from '../services/scheduleService';
-import { getUserSummary, getNextLessonLink, buildLinkUrl, buildLearningUrl, buildStartLinkedUrl, buildStartUrl } from '../services/platformApi';
+import { getUserSummary, getNextLessonLink, buildLinkUrl, buildLearningUrl, buildStartLinkedUrl, buildStartUrl, buildConnectPlaceholderUrl } from '../services/platformApi';
 import { logEvent } from '../services/eventService';
 
 const RATE_LIMIT_MAP = new Map<string, number>();
@@ -41,7 +42,6 @@ export function registerCommands(bot: Telegraf<Context>) {
 
   bot.command('connect', async (ctx) => {
     const chatId = String(ctx.chat.id);
-    const from = ctx.from;
 
     if (isRateLimited(chatId)) return;
 
@@ -51,17 +51,14 @@ export function registerCommands(bot: Telegraf<Context>) {
       return ctx.reply(MSG.alreadyLinked, alreadyLinkedKeyboard(platformUrl));
     }
 
-    const token = await createLinkToken(
-      String(from?.id),
-      chatId,
-      from?.username,
-      from?.first_name,
-      from?.last_name
-    );
+    // TODO: re-enable when /tg-connect is live on the frontend
+    // const from = ctx.from;
+    // const token = await createLinkToken(String(from?.id), chatId, from?.username, from?.first_name, from?.last_name);
+    // await logEvent(chatId, 'link_created');
+    // const linkUrl = buildLinkUrl(token, 'connect');
+    // return ctx.reply(MSG.notConnected, connectKeyboard(linkUrl));
 
-    await logEvent(chatId, 'link_created');
-    const linkUrl = buildLinkUrl(token, 'connect');
-    return ctx.reply(MSG.notConnected, connectKeyboard(linkUrl));
+    return ctx.reply(MSG.connectPlaceholder, connectPlaceholderKeyboard(buildConnectPlaceholderUrl()));
   });
 
   bot.command('schedule', async (ctx) => {
