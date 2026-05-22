@@ -27,7 +27,7 @@ import {
   scheduleRemindersForNextLesson,
   getMvpReminderOffsets,
 } from '../services/reminderService';
-import { notifyScheduleUpdated, buildLearningUrl, buildLinkUrl, buildDiscoverUrl, buildStartLinkedUrl } from '../services/platformApi';
+import { notifyScheduleUpdated, buildLearningUrl, buildLinkUrl, buildStartLinkedUrl, buildStartUrl } from '../services/platformApi';
 import { logEvent } from '../services/eventService';
 import { isValidTimeString } from '../utils/time';
 import { logger } from '../utils/logger';
@@ -75,29 +75,20 @@ export function registerCallbacks(bot: Telegraf<Context>) {
         connectUrl = buildStartLinkedUrl();
       } else {
         const token = await createLinkToken(String(ctx.from?.id), chatId, ctx.from?.username);
-        connectUrl = buildLinkUrl(token, 'discover');
+        connectUrl = buildLinkUrl(token, 'connect');
       }
-      const openMntimUrl = buildDiscoverUrl();
-      return ctx.reply(MSG.discoverMore, require('./keyboards').discoverKeyboard(openMntimUrl, connectUrl));
+      return ctx.reply(MSG.discoverMore, require('./keyboards').discoverKeyboard(buildStartUrl(), connectUrl));
     }
 
     // --- Back to welcome ---
     if (data === 'BACK_TO_WELCOME') {
-      const linked = await isAlreadyLinked(chatId);
-      let openMntimUrl: string;
-      if (linked) {
-        openMntimUrl = buildStartLinkedUrl();
-      } else {
-        const token = await createLinkToken(String(ctx.from?.id), chatId, ctx.from?.username);
-        openMntimUrl = buildLinkUrl(token, 'start');
-      }
-      return ctx.reply(MSG.welcome(), welcomeKeyboard(openMntimUrl));
+      return ctx.reply(MSG.welcome(), welcomeKeyboard(buildStartUrl()));
     }
 
     // --- Maybe later / set schedule later ---
     if (data === 'SET_SCHEDULE_LATER' || data === 'MAYBE_LATER') {
       clearSession(chatId);
-      return ctx.reply('No problem. Use /schedule whenever you\'re ready.');
+      return ctx.reply(MSG.maybeLater);
     }
 
     // --- Connect trigger ---
@@ -213,7 +204,7 @@ export function registerCallbacks(bot: Telegraf<Context>) {
       const platformUserId = await getPlatformUserIdByChatId(chatId);
       if (!platformUserId) {
         clearSession(chatId);
-        return ctx.reply('Account not linked. Please use /connect first.');
+        return ctx.reply(MSG.accountNotLinked);
       }
 
       const userSettings = await getUserSettings(chatId);
@@ -271,15 +262,15 @@ export function registerCallbacks(bot: Telegraf<Context>) {
 
     // --- Missed lesson ---
     if (data === 'MISSED_TODAY') {
-      return ctx.reply('Ok! Use /schedule to set a new time for today.');
+      return ctx.reply(MSG.missedTodayAck);
     }
     if (data === 'MISSED_TOMORROW') {
-      return ctx.reply('Got it. I\'ll remind you at your usual time tomorrow.');
+      return ctx.reply(MSG.missedTomorrowAck);
     }
 
     // --- Remind later ---
     if (data === 'REMIND_15' || data === 'REMIND_60' || data === 'REMIND_TOMORROW') {
-      return ctx.reply('Got it, I\'ll remind you soon.');
+      return ctx.reply(MSG.remindLaterAck);
     }
   });
 

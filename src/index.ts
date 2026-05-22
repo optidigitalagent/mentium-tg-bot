@@ -4,6 +4,7 @@ import { env } from './env';
 import { createBot } from './bot/bot';
 import { db, testConnection } from './db/client';
 import { runMigrations } from './db/migrate';
+import { testRedisConnection } from './utils/redis';
 import { startReminderWorker } from './workers/reminderWorker';
 import { healthRouter } from './routes/health';
 import { createWebhookRouter } from './routes/webhook';
@@ -11,6 +12,8 @@ import { createInternalEventsRouter } from './routes/internalEvents';
 import { logger } from './utils/logger';
 
 async function main() {
+  logger.info('Bot starting', { nodeEnv: env.NODE_ENV, port: env.PORT });
+
   await testConnection();
   logger.info('Database connected');
 
@@ -19,6 +22,8 @@ async function main() {
     await runMigrations(db);
     logger.info('Migration complete');
   }
+
+  await testRedisConnection();
 
   const bot = createBot();
   const app = express();
@@ -40,15 +45,24 @@ async function main() {
       logger.error('PUBLIC_BOT_URL is required when TELEGRAM_USE_POLLING=false');
       process.exit(1);
     }
+
     const webhookUrl = `${env.PUBLIC_BOT_URL}/telegram/webhook/${env.TELEGRAM_WEBHOOK_SECRET}`;
+
     logger.info('Registering webhook');
-    await bot.telegram.setWebhook(webhookUrl);
-    logger.info('Webhook set', { webhookUrl });
-    logger.info('Bot startup complete');
+    try {
+      await bot.telegram.setWebhook(webhookUrl);
+      logger.info('Webhook registered', { webhookUrl });
+    } catch (err: any) {
+      logger.error('Webhook registration failed', {
+        webhookUrl,
+        error: err.message,
+      });
+    }
   }
 
   app.listen(env.PORT, () => {
-    logger.info(`Bot service listening on port ${env.PORT}`);
+    logger.info('HTTP server listening', { port: env.PORT });
+    logger.info('Bot startup complete');
   });
 
   const shutdown = async () => {

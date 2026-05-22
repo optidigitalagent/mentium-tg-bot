@@ -15,7 +15,7 @@ import {
   getActiveSchedule,
   disableReminders,
 } from '../services/scheduleService';
-import { getUserSummary, getNextLessonLink, buildLinkUrl, buildLearningUrl, buildStartLinkedUrl } from '../services/platformApi';
+import { getUserSummary, getNextLessonLink, buildLinkUrl, buildLearningUrl, buildStartLinkedUrl, buildStartUrl } from '../services/platformApi';
 import { logEvent } from '../services/eventService';
 
 const RATE_LIMIT_MAP = new Map<string, number>();
@@ -36,24 +36,7 @@ export function registerCommands(bot: Telegraf<Context>) {
 
     await logEvent(chatId, 'bot_started', null, { username: from?.username });
 
-    const linked = await isAlreadyLinked(chatId);
-
-    let openMntimUrl: string;
-    if (linked) {
-      openMntimUrl = buildStartLinkedUrl();
-    } else {
-      const token = await createLinkToken(
-        String(from?.id),
-        chatId,
-        from?.username,
-        from?.first_name,
-        from?.last_name
-      );
-      await logEvent(chatId, 'link_created');
-      openMntimUrl = buildLinkUrl(token, 'start');
-    }
-
-    return ctx.reply(MSG.welcome(), welcomeKeyboard(openMntimUrl));
+    return ctx.reply(MSG.welcome(), welcomeKeyboard(buildStartUrl()));
   });
 
   bot.command('connect', async (ctx) => {
@@ -128,11 +111,12 @@ export function registerCommands(bot: Telegraf<Context>) {
 
     const summary = await getUserSummary(chatId);
     if (!summary) {
-      return ctx.reply('Could not load your status. Please try again later.');
+      return ctx.reply(MSG.statusLoadError);
     }
 
     const schedule = await getActiveSchedule(chatId);
-    return ctx.reply(MSG.status(summary, schedule ?? undefined));
+    const platformUrl = buildStartUrl();
+    return ctx.reply(MSG.status(summary, schedule ?? undefined), alreadyLinkedKeyboard(platformUrl));
   });
 
   bot.command('next', async (ctx) => {
@@ -145,7 +129,7 @@ export function registerCommands(bot: Telegraf<Context>) {
 
     const link = await getNextLessonLink(chatId);
     const url = link?.url ?? buildLearningUrl('telegram', 'next');
-    const label = link?.label ?? 'Open Mntim';
+    const label = link?.label ?? 'Open Mentium';
     return ctx.reply(MSG.nextLesson, openPlatformKeyboard(url, label));
   });
 

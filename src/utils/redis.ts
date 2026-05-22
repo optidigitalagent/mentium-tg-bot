@@ -1,4 +1,6 @@
+import Redis from 'ioredis';
 import { env } from '../env';
+import { logger } from './logger';
 
 export interface RedisConnectionOptions {
   host: string;
@@ -22,4 +24,14 @@ export function parseRedisUrl(redisUrl: string): RedisConnectionOptions {
 
 export function getRedisConnection(): RedisConnectionOptions {
   return parseRedisUrl(env.REDIS_URL);
+}
+
+export async function testRedisConnection(): Promise<void> {
+  const client = new Redis(getRedisConnection());
+  try {
+    await client.ping();
+    logger.info('Redis connection established');
+  } finally {
+    client.disconnect();
+  }
 }

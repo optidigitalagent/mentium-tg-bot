@@ -1,140 +1,172 @@
 import { FIXED_LESSON_DURATION_MINUTES } from '../env';
 import { UserSummary } from '../services/platformApi';
 
+const UA_DAY_SHORT: Record<string, string> = {
+  monday: 'Пн',
+  tuesday: 'Вт',
+  wednesday: 'Ср',
+  thursday: 'Чт',
+  friday: 'Пт',
+  saturday: 'Сб',
+  sunday: 'Нд',
+};
+
+function formatDays(days: string[]): string {
+  return days.map(d => UA_DAY_SHORT[d] ?? d).join(', ');
+}
+
 export const MSG = {
   welcome: () =>
-    `Welcome to Mntim 👋\n\n` +
-    `I'll help you discover the platform, connect your account, and remind you before your English lessons.`,
+    `Вітаю в Mentium 👋\n\n` +
+    `Mentium — це платформа для структурованих уроків англійської з AI-викладачем.\n\n` +
+    `Цей бот допоможе:\n• відкрити платформу\n• підключити акаунт\n• налаштувати нагадування про уроки\n\n` +
+    `Самі уроки проходять на платформі Mentium.`,
 
   discoverMore:
-    `Mntim is an AI English learning platform where you study through real 50-minute lessons with an AI teacher.\n\n` +
-    `📹 Product video coming soon.`,
+    `Mentium — це не чат-бот для випадкових повідомлень.\n\n` +
+    `Це платформа, де ти проходиш структуровані 50-хвилинні уроки англійської з AI-викладачем.\n\n` +
+    `Фокус Mentium:\n• speaking practice\n• послідовні уроки\n• зрозумілий прогрес\n• регулярність у навчанні\n\n` +
+    `Telegram-бот лише допомагає з навігацією, підключенням акаунта та нагадуваннями.\n\n` +
+    `Відео скоро буде доступне.`,
 
-  accountLinked: (name?: string) =>
-    `Nice${name ? `, ${name}` : ''}, your Mntim account is connected ✅\n\nWant to set your lesson reminders now?`,
+  accountLinked: (_name?: string) =>
+    `Акаунт Mentium підключено ✅\n\nХочеш налаштувати нагадування про уроки?`,
 
-  alreadyLinked: `Your Mntim account is already connected.`,
+  alreadyLinked: `Твій акаунт Mentium вже підключено.`,
 
-  linkExpired: `This connection link has expired.\n\nPress /connect to create a new one.`,
+  linkExpired: `Посилання для підключення недійсне.\n\nНатисни /connect, щоб створити нове.`,
 
-  linkInvalid: `This connection link is invalid or already used.\n\nPress /connect to create a new one.`,
+  linkInvalid: `Посилання для підключення недійсне або вже використане.\n\nНатисни /connect, щоб створити нове.`,
 
   platformVisitedNudge:
-    `I saw you opened Mntim 👀\n\n` +
-    `Want me to help you set a learning reminder so you don't forget your first lesson?`,
+    `Бачу, ти відкрив Mentium 👀\n\n` +
+    `Хочеш, я допоможу налаштувати нагадування, щоб не пропустити перший урок?`,
 
   paidLessonReady:
-    `Your paid lesson is ready 🎉\n\nLet's choose when you want to study so I can remind you.`,
+    `Твій оплачений урок готовий 🎉\n\n` +
+    `Обери зручний день і час — я нагадаю тобі перед уроком.\n\n` +
+    `Тривалість уроку: ${FIXED_LESSON_DURATION_MINUTES} хвилин.`,
 
-  scheduleAskDays: `Which day do you want to study?\n\n_Select at least one day, then press Done._`,
+  scheduleAskDays:
+    `Коли тобі зручно займатися?\n\nСпочатку обери день або кілька днів для уроків.`,
 
-  scheduleNeedAtLeastOneDay: `Please select at least one day before continuing.`,
+  scheduleNeedAtLeastOneDay: `Обери хоча б один день для уроку.`,
 
-  scheduleAskTime: `What time should I remind you?\n\n_Use 24-hour format (e.g. 18:30)_`,
+  scheduleAskTime:
+    `О котрій годині тобі зручно починати урок?\n\nЧас вказується за твоїм локальним часовим поясом.`,
 
-  scheduleManualTimePrompt: `Please enter your preferred study time in 24-hour format (e.g. 18:30):`,
+  scheduleManualTimePrompt: `Напиши час у форматі 24 години.\n\nНаприклад:\n18:30`,
 
-  scheduleInvalidTime: `Invalid time format. Please use HH:MM (e.g. 18:00 or 21:30).`,
+  scheduleInvalidTime: `Не схоже на правильний час.\n\nВведи час у форматі HH:MM, наприклад:\n18:30`,
 
-  scheduleConfirm: (days: string[], time: string) => {
-    const dayNames = days.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
-    return (
-      `Great. Your lesson reminder:\n\n` +
-      `📅 Days: ${dayNames}\n` +
-      `⏰ Time: ${time}\n` +
-      `📚 Lesson duration: ${FIXED_LESSON_DURATION_MINUTES} minutes\n\n` +
-      `I'll remind you:\n• on the lesson day\n• 1 hour before the lesson`
-    );
-  },
+  scheduleConfirm: (days: string[], time: string) =>
+    `Перевір розклад:\n\n` +
+    `Дні: ${formatDays(days)}\n` +
+    `Час: ${time}\n` +
+    `Тривалість уроку: ${FIXED_LESSON_DURATION_MINUTES} хвилин\n\n` +
+    `Я нагадаю:\n• у день уроку\n• за 1 годину до початку\n\n` +
+    `Зберегти?`,
 
-  schedulesSaved:
-    `Done ✅ I'll remind you before your Mntim lesson.`,
+  schedulesSaved: `Готово ✅\n\nЯ нагадаю тобі перед уроком у Mentium.`,
 
-  scheduleCancelled: `Schedule setup cancelled. Use /schedule to set it up later.`,
+  scheduleCancelled: `Налаштування скасовано. Використай /schedule, щоб повернутися до цього пізніше.`,
 
-  scheduleNotSet: `You don't have a schedule yet. Use /schedule to set one.`,
+  scheduleNotSet: `Розклад ще не встановлено. Використай /schedule.`,
 
-  currentSchedule: (days: string[], time: string) => {
-    const dayNames = days.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
-    return `Your current reminder is ${dayNames} at ${time}.`;
-  },
+  currentSchedule: (days: string[], time: string) =>
+    `Твій поточний розклад:\n\n` +
+    `Дні: ${formatDays(days)}\n` +
+    `Час: ${time}\n` +
+    `Тривалість уроку: ${FIXED_LESSON_DURATION_MINUTES} хвилин\n\n` +
+    `Що хочеш змінити?`,
 
   remindersDisabled:
-    `Reminders are now disabled.\n\nYou can enable them again anytime with /schedule.`,
+    `Нагадування вимкнено.\n\nТи можеш знову налаштувати їх у будь-який момент через /schedule.`,
 
   notConnected:
-    `Your Telegram is not connected to Mntim yet.\n\nConnect your account to get started.`,
+    `Твій Telegram ще не підключено до Mentium.\n\nПідключення потрібне, щоб бот міг надсилати корисні нагадування.`,
 
   status: (s: UserSummary, schedule?: { study_time: string; study_days: string[] }) => {
     const nextLesson = schedule
-      ? `Next lesson day: ${schedule.study_days[0]} at ${schedule.study_time}`
-      : 'No schedule set';
+      ? `Наступний урок: ${formatDays(schedule.study_days)} о ${schedule.study_time}`
+      : 'Розклад не встановлено';
     return (
-      `Your Mntim status:\n\n` +
-      `👤 Account: connected\n` +
-      `💳 Plan: ${s.subscriptionStatus}\n` +
-      `📖 Lessons completed: ${s.lessonsCompleted}\n` +
-      `🏅 Rank: ${s.rank}\n` +
-      `🔥 Streak: ${s.streakDays} days\n` +
-      `⏱ ${nextLesson}\n` +
-      `📚 Lesson duration: ${FIXED_LESSON_DURATION_MINUTES} minutes`
+      `Статус Mentium:\n\n` +
+      `Акаунт: підключено\n` +
+      `План: ${s.subscriptionStatus}\n` +
+      `Уроків завершено: ${s.lessonsCompleted}\n` +
+      `${nextLesson}\n\n` +
+      `Тривалість уроку: ${FIXED_LESSON_DURATION_MINUTES} хвилин`
     );
   },
 
-  nextLesson: `Your next Mntim session is ready.`,
+  statusLoadError: `Не вдалося отримати статус. Спробуй пізніше.`,
+
+  nextLesson: `Твій наступний урок у Mentium готовий.`,
 
   dayOfLessonReminder: (studyTime: string) =>
-    `Today is your Mntim lesson day 📚\n\n` +
-    `Your lesson is planned for ${studyTime}.\n` +
-    `Duration: ${FIXED_LESSON_DURATION_MINUTES} minutes.`,
+    `Сьогодні день твого уроку в Mentium 📚\n\n` +
+    `Початок: ${studyTime}\n` +
+    `Тривалість: ${FIXED_LESSON_DURATION_MINUTES} хвилин.`,
 
   hourBeforeReminder: () =>
-    `⏰ Your Mntim lesson starts in 1 hour.\n\n` +
-    `Get ready for your ${FIXED_LESSON_DURATION_MINUTES}-minute AI English lesson.`,
+    `Твій урок у Mentium почнеться за 1 годину ⏰\n\n` +
+    `Підготуйся до ${FIXED_LESSON_DURATION_MINUTES}-хвилинного уроку англійської.`,
 
   dayBeforeReminder: (topicTitle: string | null, studyTime: string) =>
-    `📚 Tomorrow you have a Mntim lesson.\n\n` +
-    `Topic: ${topicTitle || 'Continue your learning'}\n` +
-    `Time: ${studyTime}\n` +
-    `Duration: ${FIXED_LESSON_DURATION_MINUTES} minutes\n\n` +
-    `I'll remind you again before it starts.`,
+    `📚 Завтра у тебе урок у Mentium.\n\n` +
+    `Тема: ${topicTitle || 'Продовжуємо навчання'}\n` +
+    `Час: ${studyTime}\n` +
+    `Тривалість: ${FIXED_LESSON_DURATION_MINUTES} хвилин\n\n` +
+    `Я нагадаю ще раз перед початком.`,
 
   fifteenMinReminder: () =>
-    `Almost time 🚀\n\nYour lesson starts in 15 minutes.\n` +
-    `Get ready for your ${FIXED_LESSON_DURATION_MINUTES}-minute AI English lesson.`,
+    `Залишилось 15 хвилин ⏰\n\nТвій урок розпочнеться зовсім скоро.`,
 
   lessonStartReminder: () =>
-    `Your lesson time is now 🚀\n\nReady to continue?`,
+    `Час твого уроку настав 🚀\n\nГотовий?`,
 
   missedLesson:
-    `Looks like you missed today's lesson.\n\nNo problem — want to reschedule?`,
+    `Схоже, сьогоднішній урок пропущено.\n\nХочеш перенести?`,
 
   interruptedLesson:
-    `Looks like your lesson may have been interrupted.\n\nWant to continue later?`,
+    `Схоже, урок міг бути перерваний.\n\nХочеш продовжити пізніше?`,
 
   inactivity3Days:
-    `You haven't studied for 3 days.\n\nA short return session can help you get back on track.`,
+    `Ти не займався вже 3 дні.\n\nКороткий урок допоможе повернутись у ритм.`,
 
   demoNotCompleted:
-    `Your first AI lesson is still waiting.\n\n` +
-    `It only takes a few minutes and helps define your English level.`,
+    `Твій перший AI-урок ще чекає.\n\nВін займе кілька хвилин і допоможе визначити рівень англійської.`,
 
   demoCompletedNoPurchase:
-    `You finished your first AI lesson 🎉\n\nYour next lessons are unlocked with a learning plan.`,
+    `Ти завершив перший AI-урок 🎉\n\nНаступні уроки доступні за підпискою.`,
 
   activeUser: (book: string | null, section: string | null) =>
-    `Ready for your next AI lesson?\n\nYou're currently on:\n${book || 'your current book'} — ${section || 'your current section'}`,
+    `Готовий до наступного уроку?\n\nЗараз ти на:\n${book || 'поточна книга'} — ${section || 'поточний розділ'}`,
 
   subscriptionExpired:
-    `Your learning plan has expired.\n\nRenew your plan to continue AI lessons and keep your progress moving.`,
+    `Твоя підписка завершилась.\n\nПоновіть підписку, щоб продовжити уроки.`,
+
+  error:
+    `Щось пішло не так.\n\nСпробуй ще раз або відкрій Mentium напряму.`,
+
+  maybeLater: `Добре. Повернись до /schedule, коли будеш готовий.`,
+
+  accountNotLinked: `Акаунт не підключено. Спочатку скористайся /connect.`,
+
+  missedTodayAck: `Добре! Використай /schedule, щоб обрати новий час.`,
+
+  missedTomorrowAck: `Зрозуміло. Нагадаю тобі завтра у звичний час.`,
+
+  remindLaterAck: `Зрозуміло, нагадаю незабаром.`,
 
   help:
-    `/start — welcome & discover Mntim\n` +
-    `/connect — link Mntim account\n` +
-    `/schedule — set up lesson reminders\n` +
-    `/reschedule — change existing schedule\n` +
-    `/status — view your current status\n` +
-    `/next — get link to next lesson\n` +
-    `/stop — disable reminders\n` +
-    `/help — show this message`,
+    `/start — привітання та огляд Mentium\n` +
+    `/connect — підключити акаунт Mentium\n` +
+    `/schedule — налаштувати нагадування\n` +
+    `/reschedule — змінити розклад\n` +
+    `/status — переглянути статус\n` +
+    `/next — посилання на наступний урок\n` +
+    `/stop — вимкнути нагадування\n` +
+    `/help — показати це повідомлення`,
 };

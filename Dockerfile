@@ -16,6 +16,7 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
+COPY src/db/migrations ./dist/db/migrations
 
 EXPOSE 4001
 

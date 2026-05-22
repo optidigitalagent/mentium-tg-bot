@@ -84,7 +84,7 @@ export function startReminderWorker(bot: Telegraf<Context>) {
             await bot.telegram.sendMessage(
               telegramChatId,
               MSG.fifteenMinReminder(),
-              openPlatformKeyboard(url, 'Open Mntim') as any
+              openPlatformKeyboard(url, 'Open Mentium') as any
             );
             break;
           }
@@ -93,7 +93,7 @@ export function startReminderWorker(bot: Telegraf<Context>) {
             const url = buildReminderUrl('lesson_start');
             const { Markup } = require('telegraf');
             const keyboard = Markup.inlineKeyboard([
-              [Markup.button.url('Open Mntim', url)],
+              [Markup.button.url('Open Mentium', url)],
               [Markup.button.callback('Remind me later', 'REMIND_LATER_OPTIONS')],
             ]);
             await bot.telegram.sendMessage(
@@ -108,7 +108,7 @@ export function startReminderWorker(bot: Telegraf<Context>) {
             const url = buildReminderUrl('inactivity');
             const { Markup } = require('telegraf');
             const keyboard = Markup.inlineKeyboard([
-              [Markup.button.url('Open Mntim', url)],
+              [Markup.button.url('Open Mentium', url)],
               [Markup.button.callback('Change schedule', 'SCHEDULE_START')],
             ]);
             await bot.telegram.sendMessage(
@@ -124,7 +124,7 @@ export function startReminderWorker(bot: Telegraf<Context>) {
             const url = buildReminderUrl('interrupted');
             const { Markup } = require('telegraf');
             const keyboard = Markup.inlineKeyboard([
-              [Markup.button.url('Open Mntim', url)],
+              [Markup.button.url('Open Mentium', url)],
               [Markup.button.callback('Reschedule', 'SCHEDULE_START')],
               [Markup.button.callback('Remind me tomorrow', 'REMIND_TOMORROW')],
             ]);
