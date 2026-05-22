@@ -70,7 +70,9 @@ export function registerCallbacks(bot: Telegraf<Context>) {
     // --- Discover More ---
     if (data === 'DISCOVER_MORE') {
       await logEvent(chatId, 'discover_clicked');
-      return ctx.reply(MSG.discoverMore, require('./keyboards').discoverKeyboard(buildStartUrl()));
+      const token = await createLinkToken(String(ctx.from?.id), chatId, ctx.from?.username);
+      const connectUrl = buildLinkUrl(token, 'connect');
+      return ctx.reply(MSG.discoverMore, require('./keyboards').discoverKeyboard(buildStartUrl(), connectUrl));
     }
 
     // --- Connect placeholder (tg-connect not yet live) ---
