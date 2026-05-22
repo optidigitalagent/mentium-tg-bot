@@ -2,7 +2,8 @@ import { Router, Request, Response } from 'express';
 import { Telegraf, Context } from 'telegraf';
 import { env } from '../env';
 import { logger } from '../utils/logger';
-import { consumeLinkToken } from '../services/linkService';
+import { consumeLinkToken, getLinkByToken } from '../services/linkService';
+import { db } from '../db/client';
 import { ensureUserSettings, markUserLinkedFromEvent, recordPlatformVisitNudge, canSendPlatformVisitNudge } from '../services/scheduleService';
 import { logEvent } from '../services/eventService';
 import { MSG } from '../bot/messages';
@@ -48,6 +49,56 @@ export function createInternalEventsRouter(bot: Telegraf<Context>): Router {
     });
 
     return res.json({ ok: true, telegramLinked: true, telegramChatId });
+  });
+
+  // POST /internal/telegram/consume-link-token — validate and consume a link token
+  // Returns telegramChatId so the platform backend can store the association.
+  // Does NOT send Telegram notification — caller should follow up with /internal/telegram/linked.
+  router.post('/internal/telegram/consume-link-token', async (req: Request, res: Response) => {
+    if (!authCheck(req, res)) return;
+
+    const { linkToken } = req.body as { linkToken?: string };
+    if (!linkToken) {
+      return res.status(400).json({ ok: false, code: 'MISSING_TOKEN' });
+    }
+
+    const link = await getLinkByToken(linkToken);
+
+    if (!link) {
+      return res.status(400).json({ ok: false, code: 'INVALID_TOKEN' });
+    }
+    if (link.status === 'linked') {
+      return res.status(400).json({ ok: false, code: 'TOKEN_ALREADY_USED' });
+    }
+    if (link.status !== 'pending') {
+      return res.status(400).json({ ok: false, code: 'INVALID_TOKEN' });
+    }
+    if (new Date() > link.expires_at) {
+      await db.query(
+        `UPDATE telegram_links SET status = 'expired', updated_at = NOW() WHERE link_token = $1`,
+        [linkToken]
+      );
+      return res.status(400).json({ ok: false, code: 'TOKEN_EXPIRED' });
+    }
+
+    // Atomically mark as consumed (status='linked', platform_user_id remains NULL — set by /linked later)
+    const result = await db.query<{ telegram_chat_id: string; telegram_user_id: string }>(
+      `UPDATE telegram_links
+       SET status = 'linked', used_at = NOW(), updated_at = NOW()
+       WHERE link_token = $1 AND status = 'pending' AND expires_at > NOW()
+       RETURNING telegram_chat_id, telegram_user_id`,
+      [linkToken]
+    );
+
+    if (!result.rows[0]) {
+      return res.status(400).json({ ok: false, code: 'TOKEN_EXPIRED' });
+    }
+
+    return res.json({
+      ok: true,
+      telegramChatId: result.rows[0].telegram_chat_id,
+      telegramUserId: result.rows[0].telegram_user_id,
+    });
   });
 
   // POST /api/internal/telegram/link-confirmed — legacy link-token flow
